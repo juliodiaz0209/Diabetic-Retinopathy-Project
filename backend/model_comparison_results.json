@@ -1,0 +1,50 @@
+{
+  "timestamp": "2025-08-13 07:32:07",
+  "test_images": 10,
+  "current_model": {
+    "accuracy": 1.0,
+    "avg_confidence": 90.09500009589829,
+    "predictions": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "retfound_model": {
+    "accuracy": 0.9,
+    "avg_confidence": 70.62957286834717,
+    "predictions": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "true_labels": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "winner": "Modelo Actual",
+  "difference_percentage": 9.999999999999998
+}
