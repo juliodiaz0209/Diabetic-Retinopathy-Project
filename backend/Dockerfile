@@ -15,10 +15,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Download model checkpoint from Google Drive
-RUN echo "Downloading model checkpoint from Google Drive..." && \
+# Download model checkpoint from Google Drive (only if not exists)
+RUN if [ ! -f "checkpoint-best.pth" ]; then \
+    echo "Downloading model checkpoint from Google Drive..." && \
     curl -L -o checkpoint-best.pth "https://drive.google.com/uc?export=download&id=1nzFM77OrlKLLP7uuURtwCMYb34DYGrkw" && \
-    echo "Model checkpoint downloaded successfully"
+    echo "Model checkpoint downloaded successfully"; \
+    fi
 
 # Create directories
 RUN mkdir -p /app/diabetic_retinopathy_dataset
