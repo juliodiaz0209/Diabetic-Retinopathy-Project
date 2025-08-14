@@ -115,10 +115,11 @@ except Exception as e:
     print(f"❌ Error loading current model: {e}")
     model = None
 
-# Load RETFound model
+# Load RETFound model (prefiere cuantizado si existe)
 try:
-    retfound_model = RETFoundOfficial()
-    print("✅ RETFound model loaded successfully!")
+    checkpoint_path = "checkpoint-quantized-model.pth" if os.path.exists("checkpoint-quantized-model.pth") else "checkpoint-best.pth"
+    retfound_model = RETFoundOfficial(checkpoint_path=checkpoint_path)
+    print(f"✅ RETFound model loaded successfully from {checkpoint_path}!")
 except Exception as e:
     print(f"❌ Error loading RETFound model: {e}")
     retfound_model = None

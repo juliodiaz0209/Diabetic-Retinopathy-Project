@@ -97,23 +97,56 @@ class RETFoundOfficial:
             return model
     
     def _load_checkpoint(self):
-        """Cargar pesos del checkpoint oficial"""
+        """Cargar pesos del checkpoint (float o ya cuantizado)"""
         try:
             # Cargar checkpoint
             print(f"🔧 Cargando checkpoint: {self.checkpoint_path}")
             checkpoint = torch.load(self.checkpoint_path, map_location='cpu')
-            print(f"✅ Checkpoint cargado, keys disponibles: {list(checkpoint.keys())}")
+            if isinstance(checkpoint, dict):
+                print(f"✅ Checkpoint cargado, keys disponibles: {list(checkpoint.keys())}")
+            else:
+                print("✅ Checkpoint cargado: modelo completo serializado")
             
             # Extraer state dict
-            if 'model' in checkpoint:
+            used_key = None
+            if isinstance(checkpoint, dict) and 'model' in checkpoint:
                 state_dict = checkpoint['model']
+                used_key = 'model'
                 print("📦 Usando key 'model' del checkpoint")
-            elif 'state_dict' in checkpoint:
+            elif isinstance(checkpoint, dict) and 'state_dict' in checkpoint:
                 state_dict = checkpoint['state_dict']
+                used_key = 'state_dict'
                 print("📦 Usando key 'state_dict' del checkpoint")
             else:
-                state_dict = checkpoint
-                print("📦 Usando checkpoint directo como state_dict")
+                # Si no es dict, puede ser un modelo completo serializado
+                if not isinstance(checkpoint, dict):
+                    print("📦 Detectado modelo completo serializado. Intentando cargar directamente...")
+                    self.model = checkpoint
+                    self.model.eval()
+                    print("✅ Modelo completo cargado correctamente")
+                    return
+                else:
+                    state_dict = checkpoint
+                    print("📦 Usando checkpoint directo como state_dict")
+            
+            # Detectar si el state_dict parece provenir de un modelo cuantizado
+            try:
+                any_qdtype = any(
+                    hasattr(v, 'dtype') and str(v.dtype).startswith('torch.q') for v in state_dict.values()
+                )
+            except Exception:
+                any_qdtype = False
+            has_q_keys = any(
+                ('_packed_params' in k) or (k.endswith('.scale')) or (k.endswith('.zero_point')) for k in state_dict.keys()
+            )
+            is_quantized_state_dict = any_qdtype or has_q_keys
+            if is_quantized_state_dict:
+                print("🧪 Detectado state_dict cuantizado (dinámico) - cuantizando arquitectura antes de cargar pesos...")
+                self.model = torch.quantization.quantize_dynamic(
+                    self.model,
+                    {torch.nn.Linear},  # dinámico soporta principalmente Linear
+                    dtype=torch.qint8
+                )
             
             print(f"🔍 State dict tiene {len(state_dict)} parámetros")
             
@@ -139,6 +172,18 @@ class RETFoundOfficial:
                 print(f"⚠️ Keys inesperados: {len(unexpected_keys)}")
             
             print("✅ Pesos RETFound cargados exitosamente")
+            
+            # Si NO era un state_dict cuantizado, cuantizamos ahora para reducir memoria
+            if not is_quantized_state_dict:
+                print("🔄 Aplicando cuantización para optimizar memoria...")
+                self.model = torch.quantization.quantize_dynamic(
+                    self.model,
+                    {torch.nn.Linear, torch.nn.Conv2d},
+                    dtype=torch.qint8
+                )
+                print("✅ Modelo cuantizado exitosamente (reducción ~75% de memoria)")
+            else:
+                print("ℹ️ Checkpoint ya cuantizado cargado correctamente")
             
         except Exception as e:
             print(f"❌ Error cargando checkpoint: {e}")
