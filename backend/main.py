@@ -163,7 +163,15 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "RetinaScan AI API"}
+    return {
+        "status": "healthy", 
+        "service": "RetinaScan AI API",
+        "models": {
+            "current_model": "available" if model else "unavailable",
+            "retfound_model": "available" if retfound_model else "unavailable",
+            "checkpoint_exists": os.path.exists("checkpoint-best.pth") if retfound_model else False
+        }
+    }
 
 @app.post("/auth/register", response_model=dict)
 async def register(user: UserCreate):
