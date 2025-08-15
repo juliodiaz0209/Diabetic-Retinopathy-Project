@@ -19,11 +19,11 @@ RUN pip install gdown
 # Copy application code
 COPY . .
 
-# Download model checkpoint from Google Drive using gdown
-RUN if [ ! -f "checkpoint-best.pth" ]; then \
-    echo "Downloading model checkpoint from Google Drive using gdown..." && \
-    gdown --id 1nzFM77OrlKLLP7uuURtwCMYb34DYGrkw --output checkpoint-best.pth && \
-    echo "Model checkpoint downloaded successfully"; \
+# Download quantized model checkpoint from Google Drive using gdown
+RUN if [ ! -f "checkpoint-quantized-model.pth" ]; then \
+    echo "Downloading quantized model checkpoint from Google Drive using gdown..." && \
+    gdown --id 1E6zIEuqAw7s6yl3st3N_jt-fNLfCegAO --output checkpoint-quantized-model.pth && \
+    echo "Quantized model checkpoint downloaded successfully"; \
     fi
 
 # Create directories

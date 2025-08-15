@@ -115,13 +115,16 @@ except Exception as e:
     print(f"❌ Error loading current model: {e}")
     model = None
 
-# Load RETFound model (prefiere cuantizado si existe)
+# Load RETFound quantized model
 try:
-    checkpoint_path = "checkpoint-quantized-model.pth" if os.path.exists("checkpoint-quantized-model.pth") else "checkpoint-best.pth"
+    checkpoint_path = "checkpoint-quantized-model.pth"
+    if not os.path.exists(checkpoint_path):
+        raise FileNotFoundError(f"Quantized model checkpoint not found: {checkpoint_path}")
+    
     retfound_model = RETFoundOfficial(checkpoint_path=checkpoint_path)
-    print(f"✅ RETFound model loaded successfully from {checkpoint_path}!")
+    print(f"✅ RETFound quantized model loaded successfully from {checkpoint_path}!")
 except Exception as e:
-    print(f"❌ Error loading RETFound model: {e}")
+    print(f"❌ Error loading RETFound quantized model: {e}")
     retfound_model = None
 
 # Initialize database
@@ -169,8 +172,8 @@ async def health_check():
         "service": "RetinaScan AI API",
         "models": {
             "current_model": "available" if model else "unavailable",
-            "retfound_model": "available" if retfound_model else "unavailable",
-            "checkpoint_exists": os.path.exists("checkpoint-best.pth") if retfound_model else False
+            "retfound_quantized_model": "available" if retfound_model else "unavailable",
+            "quantized_checkpoint_exists": os.path.exists("checkpoint-quantized-model.pth") if retfound_model else False
         }
     }
 
@@ -379,10 +382,10 @@ async def get_models_info():
             "description": "Original diabetic retinopathy model",
             "endpoint": "/predict"
         },
-        "retfound_model": {
-            "name": "RETFound Official",
+        "retfound_quantized_model": {
+            "name": "RETFound Official (Quantized)",
             "status": "available" if retfound_model else "unavailable", 
-            "description": "Foundation model for retinal imaging (Nature 2023)",
+            "description": "Foundation model for retinal imaging (Nature 2023) - Quantized version",
             "endpoint": "/predict/retfound",
             "checkpoint_loaded": getattr(retfound_model, 'checkpoint_loaded', False) if retfound_model else False
         }
