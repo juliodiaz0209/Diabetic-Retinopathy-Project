@@ -34,26 +34,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     // Obtener usuario actual al cargar
     const getCurrentUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser && isMounted) {
           // Obtener perfil completo del usuario
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', user.id)
+            .eq('id', authUser.id)
             .single();
           
-          if (profile) {
+          if (profile && isMounted) {
             setUser(profile);
           }
         }
       } catch (error) {
         console.error('Error getting current user:', error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -62,6 +66,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Escuchar cambios en la autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!isMounted) return;
+
         if (event === 'SIGNED_IN' && session?.user) {
           try {
             const { data: profile } = await supabase
@@ -70,19 +76,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               .eq('id', session.user.id)
               .single();
             
-            if (profile) {
+            if (profile && isMounted) {
               setUser(profile);
             }
           } catch (error) {
             console.error('Error getting profile:', error);
           }
         } else if (event === 'SIGNED_OUT') {
-          setUser(null);
+          if (isMounted) {
+            setUser(null);
+          }
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
