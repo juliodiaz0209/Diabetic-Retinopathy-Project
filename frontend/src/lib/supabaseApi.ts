@@ -1,4 +1,4 @@
-import { supabase, User, Patient, Prediction, AuthUser } from './supabase'
+import { supabase, User, Patient } from './supabase'
 
 // Auth API usando Supabase Auth
 export const supabaseAuthAPI = {
