@@ -4,13 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Label } from '@/components/ui/label';
 import { predictionAPI } from '@/lib/api';
 import { 
   Eye, 
   Upload, 
-  Brain, 
   FileText, 
   AlertTriangle, 
   CheckCircle,
@@ -19,7 +18,6 @@ import {
   UserPlus,
   Info,
   Zap,
-  Image as ImageIcon,
   Target,
   Microscope
 } from 'lucide-react';
@@ -63,10 +61,10 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [prediction, setPrediction] = useState<PredictionResult | RETFoundPredictionResult | null>(null);
+  const [prediction, setPrediction] = useState<RETFoundPredictionResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState<'current' | 'retfound'>('current');
+
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -101,10 +99,8 @@ const Dashboard = () => {
 
     setIsAnalyzing(true);
     try {
-      // Use the selected model for prediction
-      const response = selectedModel === 'retfound' 
-        ? await predictionAPI.predictRETFound(selectedFile)
-        : await predictionAPI.predict(selectedFile);
+      // Solo usamos RETFound
+      const response = await predictionAPI.predictRETFound(selectedFile);
       
       setPrediction(response.data);
       
@@ -196,7 +192,7 @@ const Dashboard = () => {
           <div className="space-y-2">
             <div className="bg-white/70 border border-white/30 rounded-lg p-3 backdrop-blur-sm">
               <div className="flex items-center">
-                <Brain className="h-5 w-5 text-blue-600 mr-3" />
+                                        <Zap className="h-5 w-5 text-blue-600 mr-3" />
                 <div>
                   <p className="font-medium text-slate-900">AI Analysis</p>
                   <p className="text-xs text-slate-600">Active Module</p>
@@ -256,7 +252,7 @@ const Dashboard = () => {
             <div className="bg-white/80 backdrop-blur-sm border border-white/40 ring-1 ring-black/5 rounded-xl p-5 hover:shadow-md transition-all">
               <div className="flex items-center">
                 <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center mr-4">
-                  <Brain className="h-5 w-5 text-blue-600" />
+                                          <Zap className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
                   <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">AI Analysis</p>
@@ -299,33 +295,21 @@ const Dashboard = () => {
                     <Upload className="h-4 w-4 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Upload & Analysis</h3>
-                    <p className="text-sm text-slate-500">Retinal fundus imaging</p>
+                    <h3 className="text-lg font-semibold text-slate-900">RETFound AI Analysis</h3>
+                    <p className="text-sm text-slate-500">Foundation Model for Diabetic Retinopathy</p>
                   </div>
                 </div>
                 <div className="space-y-4">
-                  {/* Model Selection */}
+                  {/* Model Info - Solo RETFound */}
                   <div className="space-y-2">
-                    <Label htmlFor="model-select">Select AI Model</Label>
-                    <Select value={selectedModel} onValueChange={(value: 'current' | 'retfound') => setSelectedModel(value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose model" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="current">
-                          <div className="flex items-center">
-                            <Brain className="h-4 w-4 mr-2" />
-                            Current Model (.h5) - Fast & Accurate
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="retfound">
-                          <div className="flex items-center">
-                            <Zap className="h-4 w-4 mr-2" />
-                            RETFound Official - Research Grade
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="model-info">AI Model</Label>
+                    <div className="flex items-center p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                      <Zap className="h-5 w-5 mr-3 text-blue-600" />
+                      <div>
+                        <p className="font-medium text-blue-900">RETFound Official (Quantized)</p>
+                        <p className="text-sm text-blue-700">Research Grade - Foundation Model</p>
+                      </div>
+                    </div>
                   </div>
 
                   <input
@@ -397,8 +381,8 @@ const Dashboard = () => {
                       </>
                     ) : (
                       <>
-                        <Brain className="mr-2 h-5 w-5" />
-                        Start AI Analysis
+                        <Zap className="mr-2 h-5 w-5" />
+                        Start RETFound Analysis
                       </>
                     )}
                   </Button>
@@ -595,7 +579,7 @@ const Dashboard = () => {
           ) : (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Brain className="h-8 w-8 text-gray-500" />
+                                        <Zap className="h-8 w-8 text-gray-500" />
               </div>
               <p className="text-gray-600">
                 Upload an image to see analysis results
