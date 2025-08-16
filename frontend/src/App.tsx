@@ -65,21 +65,26 @@ class ErrorBoundary extends React.Component<
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
   
+  console.log('ProtectedRoute render:', { user, isLoading });
+  
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Cargando...</p>
+          <p className="text-sm text-gray-500 mt-2">Estado: {isLoading ? 'Cargando' : 'Completado'}</p>
         </div>
       </div>
     );
   }
   
   if (!user) {
+    console.log('ProtectedRoute: No user, redirecting to login');
     return <Navigate to="/login" replace />;
   }
   
+  console.log('ProtectedRoute: User authenticated, rendering children');
   return <>{children}</>;
 };
 
@@ -87,21 +92,26 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
   
+  console.log('PublicRoute render:', { user, isLoading });
+  
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Cargando...</p>
+          <p className="text-sm text-gray-500 mt-2">Estado: {isLoading ? 'Cargando' : 'Completado'}</p>
         </div>
       </div>
     );
   }
   
   if (user) {
+    console.log('PublicRoute: User authenticated, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
   
+  console.log('PublicRoute: No user, rendering children');
   return <>{children}</>;
 };
 

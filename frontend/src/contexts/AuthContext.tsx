@@ -35,63 +35,79 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let isMounted = true;
+    console.log('AuthContext: useEffect started');
 
-    // Obtener usuario actual al cargar
-    const getCurrentUser = async () => {
+    // Timeout de seguridad para evitar carga infinita
+    const safetyTimeout = setTimeout(() => {
+      if (isMounted) {
+        console.log('AuthContext: Safety timeout reached, setting isLoading to false');
+        setIsLoading(false);
+      }
+    }, 3000); // 3 segundos máximo
+
+    // Obtener sesión actual
+    const getCurrentSession = async () => {
       try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (authUser && isMounted) {
-          // Obtener perfil completo del usuario
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', authUser.id)
-            .single();
+        console.log('AuthContext: Getting current session...');
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('AuthContext: Session result:', session);
+        
+        if (session?.user && isMounted) {
+          // Crear un objeto User básico con la información disponible
+          const basicUser: User = {
+            id: session.user.id,
+            username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'user',
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+            email: session.user.email || '',
+            created_at: new Date().toISOString()
+          };
           
-          if (profile && isMounted) {
-            setUser(profile);
-          }
+          console.log('AuthContext: Setting user from session:', basicUser);
+          setUser(basicUser);
+        } else {
+          console.log('AuthContext: No session found');
         }
       } catch (error) {
-        console.error('Error getting current user:', error);
+        console.error('Error getting current session:', error);
       } finally {
         if (isMounted) {
+          console.log('AuthContext: Setting isLoading to false');
           setIsLoading(false);
+          clearTimeout(safetyTimeout);
         }
       }
     };
 
-    getCurrentUser();
+    getCurrentSession();
 
     // Escuchar cambios en la autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('AuthContext: Auth state change:', event, session);
         if (!isMounted) return;
 
         if (event === 'SIGNED_IN' && session?.user) {
-          try {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (profile && isMounted) {
-              setUser(profile);
-            }
-          } catch (error) {
-            console.error('Error getting profile:', error);
-          }
+          const basicUser: User = {
+            id: session.user.id,
+            username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'user',
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+            email: session.user.email || '',
+            created_at: new Date().toISOString()
+          };
+          
+          console.log('AuthContext: Setting user from auth state change:', basicUser);
+          setUser(basicUser);
         } else if (event === 'SIGNED_OUT') {
-          if (isMounted) {
-            setUser(null);
-          }
+          console.log('AuthContext: User signed out');
+          setUser(null);
         }
       }
     );
 
     return () => {
+      console.log('AuthContext: Cleanup - unmounting');
       isMounted = false;
+      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
   }, []);

@@ -22,19 +22,20 @@ export const supabaseAuthAPI = {
     
     if (error) throw error
     
+    // Comentado temporalmente para evitar errores de base de datos
     // Crear perfil de usuario en la tabla profiles
-    if (data.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: data.user.id,
-          username: userData.username,
-          name: userData.name,
-          email: userData.email
-        })
-      
-      if (profileError) throw profileError
-    }
+    // if (data.user) {
+    //   const { error: profileError } = await supabase
+    //     .from('profiles')
+    //     .insert({
+    //       id: data.user.id,
+    //       username: userData.username,
+    //       name: userData.name,
+    //       email: userData.email
+    //     })
+    //   
+    //   if (profileError) throw profileError
+    // }
     
     return data
   },
