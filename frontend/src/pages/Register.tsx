@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Eye, AlertCircle, Loader2, CheckCircle, Sparkles, Shield, Zap, UserPlus } from 'lucide-react';
+import { AlertCircle, Loader2, CheckCircle, Sparkles, Shield, Zap, UserPlus } from 'lucide-react';
 
 const Register = () => {
   const [formData, setFormData] = useState({
