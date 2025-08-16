@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Eye, AlertCircle, Loader2, Sparkles, Shield, Zap } from 'lucide-react';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -20,10 +20,10 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await login(username, password);
+      await login(email, password);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed');
+      setError(err.message || 'Login failed');
     } finally {
       setIsLoading(false);
     }
@@ -70,16 +70,16 @@ const Login = () => {
               )}
               
               <div className="space-y-3">
-                <label htmlFor="username" className="text-sm font-semibold text-slate-700">
-                  Username
+                <label htmlFor="email" className="text-sm font-semibold text-slate-700">
+                  Email
                 </label>
                 <div className="relative">
                   <Input
-                    id="username"
-                    type="text"
-                    placeholder="Enter your username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                     className="h-12 rounded-2xl border-slate-200/50 bg-white/50 backdrop-blur-sm text-slate-900 placeholder:text-slate-400 font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                   />

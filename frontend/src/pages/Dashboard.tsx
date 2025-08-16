@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { Label } from '@/components/ui/label';
 import { predictionAPI } from '@/lib/api';
+import { supabasePredictionAPI } from '@/lib/supabaseApi';
 import { 
   Eye, 
   Upload, 
@@ -111,7 +112,7 @@ const Dashboard = () => {
       
       // Optionally save the prediction (only if patient exists)
       try {
-        await predictionAPI.save({
+        await supabasePredictionAPI.save({
           prediction_class: response.data.prediction_class,
           confidence_score: response.data.confidence_score,
         });

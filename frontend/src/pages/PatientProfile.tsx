@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { patientAPI, predictionAPI } from '@/lib/api';
+import { supabasePatientAPI, supabasePredictionAPI } from '@/lib/supabaseApi';
 import { 
   User, 
   UserPlus, 
@@ -63,13 +63,13 @@ const PatientProfile = () => {
     setLoading(true);
     try {
       // Load patient info
-      const patientResponse = await patientAPI.getMyPatient();
-      setPatient(patientResponse.data);
+      const patientData = await supabasePatientAPI.getMyPatient();
+      setPatient(patientData);
       
       // Load predictions if patient exists
-      if (patientResponse.data) {
-        const predictionsResponse = await predictionAPI.getAll();
-        setPredictions(predictionsResponse.data);
+      if (patientData) {
+        const predictionsData = await supabasePredictionAPI.getAll();
+        setPredictions(predictionsData);
       }
     } catch (error) {
       console.error('Failed to load patient data:', error);
@@ -83,7 +83,7 @@ const PatientProfile = () => {
     setSaving(true);
     
     try {
-      await patientAPI.create({
+      await supabasePatientAPI.create({
         name: formData.name,
         age: parseInt(formData.age),
         gender: formData.gender,
@@ -102,16 +102,9 @@ const PatientProfile = () => {
 
   const handleDownloadReport = async () => {
     try {
-      const response = await predictionAPI.downloadReport();
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `predictions_report_${new Date().toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      // TODO: Implementar descarga de reporte con Supabase
+      // Por ahora, mostrar mensaje de funcionalidad en desarrollo
+      alert('Report download feature is under development');
     } catch (error) {
       console.error('Failed to download report:', error);
     }

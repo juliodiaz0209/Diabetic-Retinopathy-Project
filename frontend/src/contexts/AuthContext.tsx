@@ -1,20 +1,17 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authAPI } from '@/lib/api';
-
-interface User {
-  username: string;
-}
+import { supabase, User } from '@/lib/supabase';
+import { supabaseAuthAPI } from '@/lib/supabaseApi';
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   register: (userData: {
     username: string;
     name: string;
     password: string;
     email: string;
   }) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -37,32 +34,61 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // Verify token and get user info
-      authAPI
-        .getCurrentUser()
-        .then((response) => {
-          setUser(response.data);
-        })
-        .catch(() => {
-          localStorage.removeItem('token');
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    } else {
-      setIsLoading(false);
-    }
+    // Obtener usuario actual al cargar
+    const getCurrentUser = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // Obtener perfil completo del usuario
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+          
+          if (profile) {
+            setUser(profile);
+          }
+        }
+      } catch (error) {
+        console.error('Error getting current user:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getCurrentUser();
+
+    // Escuchar cambios en la autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (profile) {
+              setUser(profile);
+            }
+          } catch (error) {
+            console.error('Error getting profile:', error);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     try {
-      const response = await authAPI.login({ username, password });
-      const { access_token } = response.data;
-      
-      localStorage.setItem('token', access_token);
-      setUser({ username });
+      await supabaseAuthAPI.login({ email, password });
+      // El usuario se establecerá automáticamente en el useEffect
     } catch (error) {
       throw error;
     }
@@ -75,15 +101,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     email: string;
   }) => {
     try {
-      await authAPI.register(userData);
+      await supabaseAuthAPI.register(userData);
+      // El usuario se establecerá automáticamente en el useEffect
     } catch (error) {
       throw error;
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
+  const logout = async () => {
+    try {
+      await supabaseAuthAPI.logout();
+      setUser(null);
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Forzar logout local en caso de error
+      setUser(null);
+    }
   };
 
   const value = {
